@@ -4,7 +4,7 @@ import android.view.KeyEvent;
 
 import androidx.collection.ArraySet;
 
-import com.winlator.core.AppUtils;
+import com.ewt45.winlator.E02_KeyInput;
 import com.winlator.core.Bitmask;
 import com.winlator.inputcontrols.ExternalController;
 
@@ -115,13 +115,7 @@ public class Keyboard {
             }
         }
         else if (action == KeyEvent.ACTION_MULTIPLE) {
-            String chars = event.getCharacters();
-            if (chars != null && chars.length() == 1) {
-                int keysym = chars.charAt(0);
-                XKeycode xKeycode = getCustomXKeycodeForKeysym(keysym);
-                xServer.injectKeyPress(xKeycode, keysym);
-                AppUtils.runDelayed(() -> xServer.injectKeyRelease(xKeycode), 30);
-            }
+            return E02_KeyInput.handleAndroidKeyEvent(this.xServer, event);
         }
         return true;
     }
