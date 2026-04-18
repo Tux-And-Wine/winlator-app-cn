@@ -80,10 +80,18 @@ public class Shortcut {
             this.iconFile = iconFile;
             this.wmClass = wmClass;
 
-            String path = !execArgs.isEmpty() ? StringUtils.unescapeDOSPath(execArgs.substring(execArgs.lastIndexOf("wine ") + 4)) : "";
-            index = path.indexOf("start.exe ");
-            if (index != -1) path = path.substring(index+10);
-
+            int indexOf;
+            int lastIndexOf = execArgs.lastIndexOf("wine ");
+            String path = execArgs;
+            if (lastIndexOf != -1) {
+                path = StringUtils.unescapeDOSPath(execArgs.substring(lastIndexOf + 5));
+            }
+            int index2 = path.indexOf("start.exe ");
+            path = index2 != -1 ? path.substring(index2 + 10) : path;
+            int indexOf2 = path.indexOf("\"");
+            if (indexOf2 != -1 && (indexOf = path.indexOf("\"", indexOf2 + 1)) != -1) {
+                path = path.substring(indexOf2 + 1, indexOf);
+            }
             this.path = path;
             Container.checkObsoleteOrMissingProperties(extraData);
         }
