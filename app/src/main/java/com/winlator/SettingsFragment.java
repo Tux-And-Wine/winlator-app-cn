@@ -119,7 +119,7 @@ public class SettingsFragment extends Fragment {
         loadBox64PresetSpinner(view, sBox64Preset);
 
         final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
-        final int oldAppThemeId = preferences.getInt("app_theme", APP_THEME_DARK) == APP_THEME_DARK ? R.id.RBDark : R.id.RBLight;
+        final int oldAppThemeId = preferences.getInt("app_theme", APP_THEME_LIGHT) == APP_THEME_DARK ? R.id.RBDark : R.id.RBLight;
         rgAppTheme.check(oldAppThemeId);
 
         final CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
