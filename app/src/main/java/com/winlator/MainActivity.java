@@ -26,7 +26,6 @@ import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
 import com.winlator.contentdialog.AboutDialog;
-import com.winlator.contents.ContentsFragment;
 import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 import com.winlator.core.LocaleHelper;
@@ -158,7 +157,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         int itemId = menuItem.getItemId();
         if (itemId == R.id.menu_item_add ||
-            itemId == R.id.icon_action_bar_re ||
             itemId == R.id.menu_item_home ||
             itemId == R.id.menu_item_view_style ||
             itemId == R.id.menu_item_new_folder) {
