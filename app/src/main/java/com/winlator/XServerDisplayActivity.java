@@ -388,6 +388,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             case R.id.menu_item_toggle_fullscreen:
                 renderer.toggleFullscreen();
                 drawerLayout.closeDrawers();
+                touchpadView.toggleFullscreen();
                 break;
             case R.id.menu_item_task_manager:
                 (new TaskManagerDialog(this)).show();

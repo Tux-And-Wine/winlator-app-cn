@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Handler;
 import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,6 +27,8 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
     public static final short MAX_TAP_MILLISECONDS = 200;
     public static final float CURSOR_ACCELERATION = 1.5f;
     public static final byte CURSOR_ACCELERATION_THRESHOLD = 6;
+    private static final int UPDATE_FORM_DELAYED_TIME = 50;
+
     private final Finger[] fingers = new Finger[MAX_FINGERS];
     private byte numFingers = 0;
     private float sensitivity = 1.0f;
@@ -81,8 +84,17 @@ public class TouchpadView extends View implements View.OnCapturedPointerListener
         if (!xServer.getRenderer().isFullscreen()) {
             XForm.makeTranslation(xform, -viewTransformation.viewOffsetX, -viewTransformation.viewOffsetY);
             XForm.scale(xform, invAspect, invAspect);
+        } else {
+            // 全屏时直接拉伸，不保留黑边
+            XForm.makeScale(xform, (float) innerWidth / outerWidth, (float) innerHeight / outerHeight);
         }
-        else XForm.makeScale(xform, invAspect, invAspect);
+    }
+
+    // 全屏切换时延迟更新变换矩阵
+    public void toggleFullscreen() {
+        new Handler().postDelayed(() ->
+                updateXform(getWidth(), getHeight(), xServer.screenInfo.width, xServer.screenInfo.height),
+                UPDATE_FORM_DELAYED_TIME);
     }
 
     private class Finger {
