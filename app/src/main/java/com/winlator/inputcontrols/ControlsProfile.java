@@ -22,6 +22,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
     private String name;
     private float cursorSpeed = 1.0f;
     private boolean disableMouseInput = false;
+    private byte touchpadMode = 0;
     private final ArrayList<ControlElement> elements = new ArrayList<>();
     private final ArrayList<ExternalController> controllers = new ArrayList<>();
     private final List<ControlElement> immutableElements = Collections.unmodifiableList(elements);
@@ -60,6 +61,14 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
 
     public void setDisableMouseInput(boolean disableMouseInput) {
         this.disableMouseInput = disableMouseInput;
+    }
+
+    public byte getTouchpadMode() {
+        return touchpadMode;
+    }
+
+    public void setTouchpadMode(byte touchpadMode) {
+        this.touchpadMode = touchpadMode;
     }
 
     public boolean isVirtualGamepad() {
@@ -126,6 +135,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
             data.put("name", name);
             data.put("cursorSpeed", Float.valueOf(cursorSpeed));
             if (disableMouseInput) data.put("disableMouseInput", disableMouseInput);
+            if (touchpadMode != 0) data.put("touchpadMode", touchpadMode);
 
             JSONArray elementsJSONArray = new JSONArray();
             if (!elementsLoaded && file.isFile()) {

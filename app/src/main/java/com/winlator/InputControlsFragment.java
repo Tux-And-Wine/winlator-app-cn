@@ -114,14 +114,30 @@ public class InputControlsFragment extends Fragment {
             }
         });
 
+        final Spinner sTouchpadMode = view.findViewById(R.id.STouchpadMode);
+        sTouchpadMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (currentProfile != null) {
+                    currentProfile.setTouchpadMode((byte)position);
+                    currentProfile.save();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
         updateLayout = () -> {
             if (currentProfile != null) {
                 sbCursorSpeed.setValue(currentProfile.getCursorSpeed() * 100);
                 cbDisableMouseInput.setChecked(currentProfile.isDisableMouseInput());
+                sTouchpadMode.setSelection(currentProfile.getTouchpadMode(), false);
             }
             else {
                 sbCursorSpeed.setValue(100);
                 cbDisableMouseInput.setChecked(false);
+                sTouchpadMode.setSelection(0, false);
             }
             loadExternalControllers(view);
         };
