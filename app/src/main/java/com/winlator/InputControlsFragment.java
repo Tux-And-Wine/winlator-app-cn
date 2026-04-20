@@ -128,16 +128,26 @@ public class InputControlsFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
+        CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
+        cbMoveCursorToTouchpoint.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (currentProfile != null) {
+                currentProfile.setMoveCursorToTouchpoint(isChecked);
+                currentProfile.save();
+            }
+        });
+
         updateLayout = () -> {
             if (currentProfile != null) {
                 sbCursorSpeed.setValue(currentProfile.getCursorSpeed() * 100);
                 cbDisableMouseInput.setChecked(currentProfile.isDisableMouseInput());
                 sTouchpadMode.setSelection(currentProfile.getTouchpadMode(), false);
+                cbMoveCursorToTouchpoint.setChecked(currentProfile.isMoveCursorToTouchpoint());
             }
             else {
                 sbCursorSpeed.setValue(100);
                 cbDisableMouseInput.setChecked(false);
                 sTouchpadMode.setSelection(0, false);
+                cbMoveCursorToTouchpoint.setChecked(false);
             }
             loadExternalControllers(view);
         };

@@ -207,8 +207,9 @@ public class InputControlsManager {
             float cursorSpeed = Float.NaN;
             boolean disableMouseInput = false;
             byte touchpadMode = 0;
+            boolean moveCursorToTouchpoint = false;
             int fieldsRead = 0;
-            final byte numFieldsToBreak = 5;
+            final byte numFieldsToBreak = 6;
 
             reader.beginObject();
             while (reader.hasNext()) {
@@ -234,6 +235,10 @@ public class InputControlsManager {
                     touchpadMode = (byte)reader.nextInt();
                     fieldsRead++;
                 }
+                else if (name.equals("moveCursorToTouchpoint")) {
+                    moveCursorToTouchpoint = reader.nextBoolean();
+                    fieldsRead++;
+                }
                 else {
                     if (fieldsRead == numFieldsToBreak) break;
                     reader.skipValue();
@@ -245,6 +250,7 @@ public class InputControlsManager {
             profile.setCursorSpeed(cursorSpeed);
             profile.setDisableMouseInput(disableMouseInput);
             profile.setTouchpadMode(touchpadMode);
+            profile.setMoveCursorToTouchpoint(moveCursorToTouchpoint);
             return profile;
         }
         catch (IOException e) {
