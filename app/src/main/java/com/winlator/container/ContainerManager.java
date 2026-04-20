@@ -265,6 +265,25 @@ public class ContainerManager {
             return result;
         }
         else {
+            // 先尝试从 WCP 系统获取容器模板
+            try {
+                com.winlator.contents.ContentsManager contentsManager = new com.winlator.contents.ContentsManager(context);
+                contentsManager.syncContents();
+                com.winlator.contents.ContentProfile profile = contentsManager.getProfileByEntryName(wineVersion);
+                if (profile != null && profile.winePrefixPack != null && !profile.winePrefixPack.isEmpty()) {
+                    File file = com.winlator.contents.ContentsManager.getSourceFile(context, profile, profile.winePrefixPack);
+                    String suffix = FileUtils.getExtension(file.getName());
+                    if (suffix.equals("xz") || suffix.equals("txz")) {
+                        return TarCompressorUtils.extract(TarCompressorUtils.Type.XZ, file, containerDir);
+                    } else if (suffix.equals("zst") || suffix.equals("tzst")) {
+                        return TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, file, containerDir);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            // 如果 WCP 中没有，则回退到本地安装的 Wine
             File installedWineDir = RootFS.find(context).getInstalledWineDir();
             WineInfo wineInfo = WineInfo.fromIdentifier(context, wineVersion);
             File file = new File(installedWineDir, "container-pattern-"+wineInfo.fullVersion()+".tzst");

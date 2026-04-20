@@ -77,6 +77,22 @@ public class WineInfo implements Parcelable {
     @NonNull
     public static WineInfo fromIdentifier(Context context, String identifier) {
         if (identifier.equals(MAIN_WINE_INFO.identifier())) return MAIN_WINE_INFO;
+        
+        // 先尝试从 WCP 系统获取
+        try {
+            com.winlator.contents.ContentsManager contentsManager = new com.winlator.contents.ContentsManager(context);
+            contentsManager.syncContents();
+            com.winlator.contents.ContentProfile profile = contentsManager.getProfileByEntryName(identifier);
+            if (profile != null && profile.type == com.winlator.contents.ContentProfile.ContentType.CONTENT_TYPE_WINE) {
+                File installDir = com.winlator.contents.ContentsManager.getInstallDir(context, profile);
+                if (installDir.exists()) {
+                    return new WineInfo(profile.verName, null, installDir.getPath());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
         Matcher matcher = pattern.matcher(identifier);
         if (matcher.find()) {
             File installedWineDir = RootFS.find(context).getInstalledWineDir();

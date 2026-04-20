@@ -41,6 +41,8 @@ import com.winlator.contentdialog.AddEnvVarDialog;
 import com.winlator.contentdialog.AudioDriverConfigDialog;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.VortekConfigDialog;
+import com.winlator.contents.ContentsManager;
+import com.winlator.contents.ContentProfile;
 import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
 import com.winlator.container.DXWrapperPicker;
@@ -135,7 +137,8 @@ public class ContainerDetailFragment extends Fragment {
 
         final ArrayList<WineInfo> wineInfos = WineInstaller.getInstalledWineInfos(context);
         final Spinner sWineVersion = view.findViewById(R.id.SWineVersion);
-        if (wineInfos.size() > 1) loadWineVersionSpinner(view, sWineVersion, wineInfos);
+        // 总是加载 Wine 版本选择器，即使没有本地安装的 Wine
+        loadWineVersionSpinner(view, sWineVersion, wineInfos);
 
         loadScreenSizeSpinner(view, isEditMode() ? container.getScreenSize() : Container.DEFAULT_SCREEN_SIZE);
         loadScreenOrientationSpinner(view, isEditMode() ? container.getScreenOrientation() : Container.DEFAULT_SCREEN_ORIENTATION);
@@ -265,8 +268,10 @@ public class ContainerDetailFragment extends Fragment {
                     data.put("box64Version", box64VersionSelected);
                     data.put("desktopTheme", desktopTheme);
 
-                    if (wineInfos.size() > 1) {
-                        data.put("wineVersion", wineInfos.get(sWineVersion.getSelectedItemPosition()).identifier());
+                    // 保存 Wine 版本
+                    String wineVersion = sWineVersion.getSelectedItem().toString();
+                    if (!wineVersion.isEmpty()) {
+                        data.put("wineVersion", wineVersion);
                     }
 
                     preloaderDialog.show(R.string.creating_container);
@@ -587,7 +592,35 @@ public class ContainerDetailFragment extends Fragment {
         final Context context = getContext();
         sWineVersion.setEnabled(!isEditMode());
         view.findViewById(R.id.LLWineVersion).setVisibility(View.VISIBLE);
-        sWineVersion.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, wineInfos));
-        if (isEditMode()) AppUtils.setSpinnerSelectionFromValue(sWineVersion, WineInfo.fromIdentifier(context, container.getWineVersion()).toString());
+        
+        ArrayList<String> wineVersions = new ArrayList<>();
+        
+        // 添加本地安装的 Wine 版本
+        for (WineInfo wineInfo : wineInfos) {
+            wineVersions.add(wineInfo.identifier());
+        }
+        
+        // 从 WCP 系统添加 Wine 版本
+        try {
+            ContentsManager contentsManager = new ContentsManager(context);
+            contentsManager.syncContents();
+            for (ContentProfile profile : contentsManager.getProfiles(ContentProfile.ContentType.CONTENT_TYPE_WINE)) {
+                String entryName = ContentsManager.getEntryName(profile);
+                if (!wineVersions.contains(entryName)) {
+                    wineVersions.add(entryName);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        sWineVersion.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, wineVersions));
+        
+        // 设置默认版本为 10.10
+        if (!isEditMode()) {
+            AppUtils.setSpinnerSelectionFromValue(sWineVersion, "10.10");
+        } else {
+            AppUtils.setSpinnerSelectionFromValue(sWineVersion, container.getWineVersion());
+        }
     }
 }
