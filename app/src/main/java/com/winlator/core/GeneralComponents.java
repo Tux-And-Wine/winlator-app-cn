@@ -12,6 +12,8 @@ import android.widget.Spinner;
 import com.winlator.MainActivity;
 import com.winlator.R;
 import com.winlator.contentdialog.ContentDialog;
+import com.winlator.contents.ContentsManager;
+import com.winlator.contents.ContentProfile;
 import com.winlator.xenvironment.RootFS;
 
 import org.json.JSONArray;
@@ -21,6 +23,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 public abstract class GeneralComponents {
@@ -153,14 +156,69 @@ public abstract class GeneralComponents {
         return file;
     }
 
+    /**
+     * 从 WCP 系统获取已安装的组件版本列表
+     */
+    private static List<String> getWCPInstalledComponentNames(Type type, Context context) {
+        List<String> result = new ArrayList<>();
+        try {
+            ContentsManager manager = new ContentsManager(context);
+            manager.syncContents();
+            
+            ContentProfile.ContentType wcpType = getWCPContentType(type);
+            if (wcpType != null) {
+                List<ContentProfile> profiles = manager.getProfiles(wcpType);
+                if (profiles != null) {
+                    for (ContentProfile profile : profiles) {
+                        // 只添加本地已安装的组件（remoteUrl 为 null）
+                        if (profile.remoteUrl == null) {
+                            result.add(profile.verName);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * 将 GeneralComponents.Type 转换为 ContentProfile.ContentType
+     */
+    private static ContentProfile.ContentType getWCPContentType(Type type) {
+        switch (type) {
+            case DXVK:
+                return ContentProfile.ContentType.CONTENT_TYPE_DXVK;
+            case VKD3D:
+                return ContentProfile.ContentType.CONTENT_TYPE_VKD3D;
+            case BOX64:
+                return ContentProfile.ContentType.CONTENT_TYPE_BOX64;
+            case TURNIP:
+                return ContentProfile.ContentType.CONTENT_TYPE_TURNIP;
+            default:
+                return null;
+        }
+    }
+
     public static ArrayList<String> getInstalledComponentNames(Type type, Context context) {
         File componentDir = getComponentDir(type, context);
         ArrayList<String> result = new ArrayList<>();
 
+        // 从传统路径读取已安装组件
         String[] names;
         if (componentDir.isDirectory() && (names = componentDir.list()) != null) {
             for (String name : names) result.add(parseDisplayText(type, name));
         }
+
+        // 从 WCP 系统读取已安装组件
+        List<String> wcpNames = getWCPInstalledComponentNames(type, context);
+        for (String name : wcpNames) {
+            if (!result.contains(name)) {
+                result.add(name);
+            }
+        }
+
         return result;
     }
 
@@ -209,6 +267,12 @@ public abstract class GeneralComponents {
     public static void extractFile(Type type, Context context, String identifier, String defaultVersion, TarCompressorUtils.OnExtractFileListener onExtractFileListener) {
         File destination = type.getDestination(context);
 
+        // 先尝试从 WCP 系统提取
+        if (extractFromWCP(type, context, identifier, destination, onExtractFileListener)) {
+            return;
+        }
+
+        // 如果 WCP 中没有，则从传统路径提取
         if (isBuiltinComponent(type, identifier)) {
             String sourcePath = type.assetFolder()+"/"+type.lowerName()+"-"+identifier+".tzst";
             TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, context, sourcePath, destination, onExtractFileListener);
@@ -224,181 +288,52 @@ public abstract class GeneralComponents {
         }
     }
 
+    /**
+     * 从 WCP 系统提取组件文件
+     */
+    private static boolean extractFromWCP(Type type, Context context, String identifier, File destination, TarCompressorUtils.OnExtractFileListener onExtractFileListener) {
+        try {
+            ContentsManager manager = new ContentsManager(context);
+            manager.syncContents();
+            
+            ContentProfile.ContentType wcpType = getWCPContentType(type);
+            if (wcpType == null) return false;
+            
+            List<ContentProfile> profiles = manager.getProfiles(wcpType);
+            if (profiles == null) return false;
+            
+            // 查找匹配的组件
+            ContentProfile targetProfile = null;
+            for (ContentProfile profile : profiles) {
+                if (profile.remoteUrl == null && profile.verName.equals(identifier)) {
+                    targetProfile = profile;
+                    break;
+                }
+            }
+            
+            if (targetProfile == null) return false;
+            
+            // 应用组件（复制文件到目标位置）
+            // 注意：applyContent 会将文件复制到 rootfs 中的正确位置，不需要指定 destination
+            manager.applyContent(targetProfile);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private static String parseDisplayText(Type type, String filename) {
         return filename.replace(type.lowerName()+"-", "").replace(".tzst", "").replace(".sf2", "");
     }
 
-    private static void downloadComponentFile(final Type type, final String filename, final Spinner spinner, final String defaultItem) {
-        final Activity activity = (Activity)spinner.getContext();
-        File destination = new File(getComponentDir(type, activity), filename);
-        if (destination.isFile()) destination.delete();
-        HttpUtils.download(activity, String.format(INSTALLABLE_COMPONENTS_URL, type.lowerName()+"/"+filename), destination, (success) -> {
-            if (success) {
-                loadSpinner(type, spinner, parseDisplayText(type, filename), defaultItem);
-            }
-            else AppUtils.showToast(activity, R.string.a_network_error_occurred);
-        });
-    }
-
-    private static void installFromPackagedFile(Context context, TarCompressorUtils.Type compressedType, final Type type, File originFile, String identifier, JSONArray filesJSONArray) throws JSONException {
-        File componentDir = getComponentDir(type, context);
-        File tempDir = new File(componentDir, type.lowerName()+"-"+identifier);
-        if (tempDir.isDirectory()) FileUtils.delete(tempDir);
-        tempDir.mkdirs();
-
-        for (int i = 0; i < filesJSONArray.length(); i++) {
-            JSONObject fileJSONObject = filesJSONArray.getJSONObject(i);
-            String target = fileJSONObject.getString("target");
-            File file = null;
-
-            if (target.contains("system32")) {
-                file = new File(tempDir, "system32/"+FileUtils.getName(target));
-            }
-            else if (target.contains("syswow64")) {
-                file = new File(tempDir, "syswow64/"+FileUtils.getName(target));
-            }
-
-            if (file != null) {
-                File parent = file.getParentFile();
-                parent.mkdirs();
-                final String source = fileJSONObject.getString("source");
-                TarCompressorUtils.extract(compressedType, originFile, tempDir, (destination, size) -> destination.getPath().endsWith(source) ? destination : null);
-            }
-        }
-
-        String filename = type.lowerName()+"-"+identifier+".tzst";
-        File destination = new File(componentDir, filename);
-        TarCompressorUtils.compress(TarCompressorUtils.Type.ZSTD, new File(tempDir, "/."), destination, MainActivity.CONTAINER_PATTERN_COMPRESSION_LEVEL);
-        FileUtils.delete(tempDir);
-    }
-
-    private static void openFileForInstall(final MainActivity activity, final Type type, final Spinner spinner, final String defaultItem) {
-        activity.setOpenFileCallback((uri) -> {
-            String path = FileUtils.getFilePathFromUri(uri);
-            if (path == null) return;
-
-            try {
-                File source = new File(path);
-                switch (type) {
-                    case SOUNDFONT: {
-                        String filename = FileUtils.getName(path);
-                        File destination = new File(getComponentDir(type, activity), filename);
-                        if (destination.isFile()) FileUtils.delete(destination);
-                        if (FileUtils.copy(source, destination)) loadSpinner(type, spinner, parseDisplayText(type, filename), defaultItem);
-                        break;
-                    }
-                    case ADRENOTOOLS_DRIVER: {
-                        byte[] manifestData = ZipUtils.read(source, "*.json");
-                        if (manifestData != null) {
-                            JSONObject manifestJSONObject = new JSONObject(new String(manifestData));
-                            String filename = manifestJSONObject.optString("name", manifestJSONObject.optString("libraryName", ""));
-                            File destination = new File(getComponentDir(type, activity), filename);
-                            if (destination.isDirectory()) FileUtils.delete(destination);
-                            destination.mkdirs();
-                            if (ZipUtils.extract(source, destination)) loadSpinner(type, spinner, filename, defaultItem);
-                        }
-                        break;
-                    }
-                    default: {
-                        TarCompressorUtils.Type compressedType = TarCompressorUtils.Type.ZSTD;
-                        byte[] manifestData = TarCompressorUtils.read(compressedType, source, "*.json");
-                        if (manifestData == null) manifestData = TarCompressorUtils.read(compressedType = TarCompressorUtils.Type.XZ, source, "*.json");
-                        if (manifestData != null) {
-                            JSONObject manifestJSONObject = new JSONObject(new String(manifestData));
-                            String contentType = manifestJSONObject.optString("type", "").toUpperCase(Locale.ENGLISH);
-                            String identifier = StringUtils.parseIdentifier(manifestJSONObject.optString("versionName", ""));
-                            JSONArray filesJSONArray = manifestJSONObject.optJSONArray("files");
-
-                            if (contentType.equals(type.name()) && !identifier.isEmpty() && filesJSONArray != null) {
-                                installFromPackagedFile(activity, compressedType, type, source, identifier, filesJSONArray);
-                                loadSpinner(type, spinner, identifier, defaultItem);
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-            catch (JSONException e) {}
-        });
-
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*");
-        activity.startActivityForResult(intent, MainActivity.OPEN_FILE_REQUEST_CODE);
-    }
-
-    private static void showDownloadableListDialog(Type type, final Spinner spinner, final String defaultItem) {
-        final Activity activity = (Activity)spinner.getContext();
-        final PreloaderDialog preloaderDialog = new PreloaderDialog(activity);
-        preloaderDialog.show(R.string.loading);
-        HttpUtils.download(String.format(INSTALLABLE_COMPONENTS_URL, type.lowerName()+"/index.txt"), (content) -> activity.runOnUiThread(() -> {
-            preloaderDialog.close();
-            if (content != null) {
-                if (content.isEmpty()) {
-                    AppUtils.showToast(activity, R.string.there_are_no_items_to_download);
-                    return;
-                }
-                final String[] filenames = content.split("\n");
-                final String[] items = filenames.clone();
-                for (int i = 0; i < items.length; i++) {
-                    items[i] = type.title()+" "+parseDisplayText(type, items[i]);
-                }
-
-                ContentDialog.showSelectionList(activity, R.string.install_component, items, false, (positions) -> {
-                    if (!positions.isEmpty()) downloadComponentFile(type, filenames[positions.get(0)], spinner, defaultItem);
-                });
-            }
-            else AppUtils.showToast(activity, R.string.a_network_error_occurred);
-        }));
-    }
-
     public static void initViews(final Type type, View toolbox, final Spinner spinner, final String selectedItem, final String defaultItem) {
-        final Context context = spinner.getContext();
-        toolbox.findViewWithTag("install").setOnClickListener((v) -> {
-            InstallMode installMode = type.getInstallMode();
-            switch (installMode) {
-                case DOWNLOAD:
-                    showDownloadableListDialog(type, spinner, defaultItem);
-                    break;
-                case FILE:
-                    openFileForInstall((MainActivity)context, type, spinner, defaultItem);
-                    break;
-                case BOTH:
-                    PopupMenu popupMenu = new PopupMenu(context, v);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) popupMenu.setForceShowIcon(true);
-                    popupMenu.inflate(R.menu.open_file_popup_menu);
-                    popupMenu.setOnMenuItemClickListener((menuItem) -> {
-                        int itemId = menuItem.getItemId();
-                        if (itemId == R.id.menu_item_open_file) {
-                            openFileForInstall((MainActivity)context, type, spinner, defaultItem);
-                        }
-                        else if (itemId == R.id.menu_item_download_file) {
-                            showDownloadableListDialog(type, spinner, defaultItem);
-                        }
-                        return true;
-                    });
-                    popupMenu.show();
-                    break;
-            }
-        });
-
-        toolbox.findViewWithTag("remove").setOnClickListener((v) -> {
-            String identifier = spinner.getSelectedItem().toString();
-
-            if (isBuiltinComponent(type, identifier)) {
-                AppUtils.showToast(context, R.string.you_cannot_remove_this_component_version);
-                return;
-            }
-
-            File source = type.getSource(context, identifier);
-            if (source.exists()) {
-                ContentDialog.confirm(context, R.string.do_you_want_to_remove_this_component_version, () -> {
-                    FileUtils.delete(source);
-                    loadSpinner(type, spinner, selectedItem, defaultItem);
-                });
-            }
-        });
-
+        // WCP 系统统一管理组件，不再需要工具箱按钮
+        // 隐藏工具箱
+        if (toolbox != null) {
+            toolbox.setVisibility(View.GONE);
+        }
+        
         loadSpinner(type, spinner, selectedItem, defaultItem);
     }
 
