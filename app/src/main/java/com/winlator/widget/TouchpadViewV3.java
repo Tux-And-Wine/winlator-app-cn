@@ -113,7 +113,7 @@ public class TouchpadViewV3 extends View implements View.OnCapturedPointerListen
             XForm.makeTranslation(xform, -viewTransformation.viewOffsetX, -viewTransformation.viewOffsetY);
             XForm.scale(xform, invAspect, invAspect);
         } else {
-            XForm.makeScale(xform, invAspect, invAspect);
+            XForm.makeScale(xform, (float) innerWidth / outerWidth, (float) innerHeight / outerHeight);
         }
     }
 
