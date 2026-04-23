@@ -193,6 +193,14 @@ public class TouchpadView extends FrameLayout {
         return impl != null && impl.isEnabled();
     }
 
+    public void setSwapMouseButtons() {
+        if (impl instanceof TouchpadViewV1) {
+            ((TouchpadViewV1) impl).setSwapMouseButtons();
+        } else if (impl instanceof TouchpadViewV2) {
+            ((TouchpadViewV2) impl).setSwapMouseButtons();
+        }
+    }
+
     @Override
     public void requestPointerCapture() {
         impl.requestPointerCapture();

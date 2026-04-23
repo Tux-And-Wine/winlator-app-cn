@@ -17,6 +17,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.winlator.core.AppUtils;
 import com.winlator.inputcontrols.Binding;
 import com.winlator.inputcontrols.ControlElement;
 import com.winlator.inputcontrols.ControlsProfile;
@@ -483,6 +486,12 @@ public class InputControlsView extends View {
             else if (binding == Binding.MOUSE_MOVE_DOWN || binding == Binding.MOUSE_MOVE_UP) {
                 mouseMoveOffset.y = isActionDown ? (offset != 0 ? offset : (binding == Binding.MOUSE_MOVE_UP ? -1 : 1)) : 0;
                 if (isActionDown) createMouseMoveTimer();
+            }
+            else if (binding == Binding.MOUSE_SWAP_BUTTONS) {
+                if (isActionDown && touchpadView != null) touchpadView.setSwapMouseButtons();
+            }
+            else if (binding == Binding.MOUSE_SHOW_INPUT_METHOD) {
+                if (isActionDown) AppUtils.showKeyboard((AppCompatActivity)getContext());
             }
             else {
                 Pointer.Button pointerButton = binding.getPointerButton();
