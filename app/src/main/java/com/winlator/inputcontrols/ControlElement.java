@@ -806,6 +806,12 @@ public class ControlElement {
         return !propertyFlags.isSet(FLAG_TOGGLE_SWITCH) && (binding == Binding.GAMEPAD_BUTTON_L3 || binding == Binding.GAMEPAD_BUTTON_R3);
     }
 
+    private void performHapticFeedback() {
+        if (inputControlsView.isTouchHapticFeedbackEnabled()) {
+            inputControlsView.performTouchHapticFeedback();
+        }
+    }
+
     public boolean handleTouchDown(int pointerId, float x, float y) {
         if (currentPointerId == -1 && containsPoint(x, y)) {
             currentPointerId = pointerId;
@@ -815,12 +821,14 @@ public class ControlElement {
                 if (propertyFlags.isSet(FLAG_MOUSE_MOVE_MODE)) inputControlsView.getTouchpadView().mouseMove(x, y, MotionEvent.ACTION_DOWN);
 
                 propertyFlags.set(FLAG_PRESSED);
+                performHapticFeedback();
                 inputControlsView.invalidate();
                 return true;
             }
             else if (type == Type.RANGE_BUTTON) {
                 scroller.handleTouchDown(x, y);
                 propertyFlags.set(FLAG_PRESSED);
+                performHapticFeedback();
                 inputControlsView.invalidate();
                 return true;
             }
@@ -830,6 +838,7 @@ public class ControlElement {
                     byte note = (byte)(12 + MIDIHandler.parseNoteNumber(text));
                     winHandler.getMIDIhandler().sendShortMsg((byte) MIDIHandler.CMD_NOTE_ON, (byte)0, note, Byte.MAX_VALUE);
                     propertyFlags.set(FLAG_PRESSED);
+                    performHapticFeedback();
                     inputControlsView.invalidate();
                 }
                 return true;
@@ -841,6 +850,7 @@ public class ControlElement {
                     }
                 }
                 else propertyFlags.set(FLAG_VISIBLE);
+                performHapticFeedback();
                 inputControlsView.invalidate();
                 return true;
             }
@@ -849,6 +859,7 @@ public class ControlElement {
                     if (currentPosition == null) currentPosition = new PointF();
                     currentPosition.set(x, y);
                 }
+                performHapticFeedback();
                 return handleTouchMove(pointerId, x, y);
             }
         }
