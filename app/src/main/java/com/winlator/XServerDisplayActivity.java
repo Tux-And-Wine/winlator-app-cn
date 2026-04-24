@@ -655,6 +655,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
         inputControlsView = new InputControlsView(this);
         inputControlsView.setOverlayOpacity(preferences.getFloat("overlay_opacity", InputControlsView.DEFAULT_OVERLAY_OPACITY));
+        inputControlsView.setTouchHapticFeedbackEnabled(preferences.getBoolean("haptic_feedback", false));
         inputControlsView.setTouchpadView(touchpadView);
         inputControlsView.setXServer(xServer);
         inputControlsView.setVisibility(View.GONE);
@@ -715,6 +716,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         final CheckBox cbShowTouchscreenControls = dialog.findViewById(R.id.CBShowTouchscreenControls);
         cbShowTouchscreenControls.setChecked(inputControlsView.isShowTouchscreenControls());
 
+        final CheckBox cbHapticFeedback = dialog.findViewById(R.id.CBHapticFeedback);
+        cbHapticFeedback.setChecked(inputControlsView.isTouchHapticFeedbackEnabled());
+
         dialog.findViewById(R.id.BTSettings).setOnClickListener((v) -> {
             int position = sProfile.getSelectedItemPosition();
             int currentProfileId = position > 0 ? inputControlsManager.getProfiles().get(position - 1).id : 0;
@@ -742,6 +746,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         dialog.setOnConfirmCallback(() -> {
             xServer.setRelativeMouseMovement(cbRelativeMouseMovement.isChecked());
             inputControlsView.setShowTouchscreenControls(cbShowTouchscreenControls.isChecked());
+            inputControlsView.setTouchHapticFeedbackEnabled(cbHapticFeedback.isChecked());
+            preferences.edit().putBoolean("haptic_feedback", cbHapticFeedback.isChecked()).apply();
             int position = sProfile.getSelectedItemPosition();
             if (position > 0) {
                 showInputControls(inputControlsManager.getProfiles().get(position - 1));
