@@ -724,7 +724,17 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             editInputControlsCallback = () -> {
                 hideInputControls();
                 inputControlsManager.loadProfiles(true);
-                loadProfileSpinner.run();
+                ArrayList<ControlsProfile> profiles = inputControlsManager.getProfiles(true);
+                ArrayList<String> profileItems = new ArrayList<>();
+                int selectedPosition = 0;
+                profileItems.add("-- "+getString(R.string.disabled)+" --");
+                for (int i = 0; i < profiles.size(); i++) {
+                    ControlsProfile profile = profiles.get(i);
+                    if (currentProfileId > 0 && profile.id == currentProfileId) selectedPosition = i + 1;
+                    profileItems.add(profile.getName());
+                }
+                sProfile.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, profileItems));
+                sProfile.setSelection(selectedPosition);
             };
             startActivityForResult(intent, MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE);
         });
