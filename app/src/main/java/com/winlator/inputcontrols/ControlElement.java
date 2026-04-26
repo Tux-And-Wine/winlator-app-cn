@@ -349,8 +349,26 @@ public class ControlElement {
         return boundingBox;
     }
 
+    private boolean isSwapMouseButtons() {
+        TouchpadView touchpadView = inputControlsView.getTouchpadView();
+        return touchpadView != null && touchpadView.isSwapMouseButtons();
+    }
+
+    private byte getEffectiveIconId() {
+        if (iconId > 0 && isSwapMouseButtons()) {
+            Binding primaryBinding = bindings[0];
+            if (primaryBinding == Binding.MOUSE_LEFT_BUTTON) return 13;
+            if (primaryBinding == Binding.MOUSE_RIGHT_BUTTON) return 12;
+        }
+        return iconId;
+    }
+
     private String getBindingTextAt(int index) {
         Binding binding = getBindingAt(index);
+        if (isSwapMouseButtons()) {
+            if (binding == Binding.MOUSE_LEFT_BUTTON) binding = Binding.MOUSE_RIGHT_BUTTON;
+            else if (binding == Binding.MOUSE_RIGHT_BUTTON) binding = Binding.MOUSE_LEFT_BUTTON;
+        }
         String text = binding.toString().replace("NUMPAD ", "NP").replace("BUTTON ", "");
         if (text.length() > 7) {
             String[] parts = text.split(" ");
@@ -455,8 +473,9 @@ public class ControlElement {
                     }
                 }
 
-                if (iconId > 0) {
-                    drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), iconId, true);
+                byte effectiveIconId = getEffectiveIconId();
+                if (effectiveIconId > 0) {
+                    drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), effectiveIconId, true);
                 }
                 else {
                     String text = getDisplayText();
