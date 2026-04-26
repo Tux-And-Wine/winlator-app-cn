@@ -57,7 +57,7 @@ public class WineInfo implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        return "Wine "+fullVersion()+(this == MAIN_WINE_INFO ? " (Custom)" : "");
+        return prefix.substring(0,1).toUpperCase()+prefix.substring(1)+" "+fullVersion()+(this == MAIN_WINE_INFO ? " (Custom)" : "");
     }
 
     @Override
