@@ -364,21 +364,6 @@ public class TouchpadViewV2 extends View implements View.OnCapturedPointerListen
                         else releasePointerButtonLeft(finger1);
                     }
                 } else if (finger1.isTap()) {
-                    // 双击检测：缩放模式下双击重置缩放
-                    if (pinchZoomEnabled && xServer.getRenderer().getPinchZoom() > 1.0f) {
-                        long now = System.currentTimeMillis();
-                        long dt = now - lastSingleTapTime;
-                        float dd = (float) Math.hypot(finger1.x - lastSingleTapX, finger1.y - lastSingleTapY);
-                        if (dt < DOUBLE_TAP_MAX_MILLISECONDS && dd < DOUBLE_TAP_MAX_TRAVEL_DISTANCE) {
-                            currentPinchZoom = 1.0f;
-                            xServer.getRenderer().resetPinchZoom();
-                            lastSingleTapTime = 0;
-                        } else {
-                            lastSingleTapTime = now;
-                            lastSingleTapX = finger1.x;
-                            lastSingleTapY = finger1.y;
-                        }
-                    }
                     if (swapMouseButtons) pressPointerButtonRight(finger1);
                     else pressPointerButtonLeft(finger1);
                 }
