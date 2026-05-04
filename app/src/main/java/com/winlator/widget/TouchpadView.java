@@ -32,6 +32,7 @@ public class TouchpadView extends FrameLayout {
     private boolean longPressRightClick = true;
     private boolean pinchZoomEnabled = false;
     private boolean shortDragEnabled = false;
+    private boolean twoFingersScroll = true;
     private Runnable fourFingersTapCallback;
 
     public TouchpadView(Context context, XServer xServer, boolean capturePointerOnExternalMouse) {
@@ -71,6 +72,7 @@ public class TouchpadView extends FrameLayout {
             v1.setLongPressRightClick(longPressRightClick);
             v1.setPinchZoomEnabled(pinchZoomEnabled);
             v1.setShortDragEnabled(shortDragEnabled);
+            v1.setTwoFingersScroll(twoFingersScroll);
             v1.setEnabled(isEnabled());
         } else if (impl instanceof TouchpadViewV2) {
             TouchpadViewV2 v2 = (TouchpadViewV2) impl;
@@ -84,6 +86,7 @@ public class TouchpadView extends FrameLayout {
             v2.setLongPressRightClick(longPressRightClick);
             v2.setPinchZoomEnabled(pinchZoomEnabled);
             v2.setShortDragEnabled(shortDragEnabled);
+            v2.setTwoFingersScroll(twoFingersScroll);
             v2.setEnabled(isEnabled());
         } else if (impl instanceof TouchpadViewV3) {
             TouchpadViewV3 v3 = (TouchpadViewV3) impl;
@@ -97,6 +100,7 @@ public class TouchpadView extends FrameLayout {
             v3.setLongPressRightClick(longPressRightClick);
             v3.setPinchZoomEnabled(pinchZoomEnabled);
             v3.setShortDragEnabled(shortDragEnabled);
+            v3.setTwoFingersScroll(twoFingersScroll);
             v3.setEnabled(isEnabled());
         }
     }
@@ -261,6 +265,21 @@ public class TouchpadView extends FrameLayout {
             ((TouchpadViewV2) impl).setShortDragEnabled(shortDragEnabled);
         } else if (impl instanceof TouchpadViewV3) {
             ((TouchpadViewV3) impl).setShortDragEnabled(shortDragEnabled);
+        }
+    }
+
+    public boolean isTwoFingersScroll() {
+        return twoFingersScroll;
+    }
+
+    public void setTwoFingersScroll(boolean twoFingersScroll) {
+        this.twoFingersScroll = twoFingersScroll;
+        if (impl instanceof TouchpadViewV1) {
+            ((TouchpadViewV1) impl).setTwoFingersScroll(twoFingersScroll);
+        } else if (impl instanceof TouchpadViewV2) {
+            ((TouchpadViewV2) impl).setTwoFingersScroll(twoFingersScroll);
+        } else if (impl instanceof TouchpadViewV3) {
+            ((TouchpadViewV3) impl).setTwoFingersScroll(twoFingersScroll);
         }
     }
 

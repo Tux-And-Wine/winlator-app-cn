@@ -372,6 +372,7 @@
     <string name="touchpad_mode">触控板模式</string>
     <string name="touchpad_settings">触控板设置</string>
     <string name="two_fingers_drag">双指拖动</string>
+    <string name="two_fingers_scroll">双指滚动</string>
     <string name="two_fingers_right_click">双指右键点击</string>
     <string name="long_press_right_click">长按右键点击</string>
     <string name="pinch_zoom_enabled">双指缩放</string>

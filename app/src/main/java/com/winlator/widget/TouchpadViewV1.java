@@ -78,6 +78,7 @@ public class TouchpadViewV1 extends View implements View.OnCapturedPointerListen
     private float resolutionScale = 1.0f;
 
     private boolean shortDragEnabled = false;  // 短时拖动开关，默认关闭
+    private boolean twoFingersScroll = true;  // 双指滚动开关，默认开启
 
     // 反向缩放：将 X server 坐标还原为缩放前对应的位置
     // 渲染器缩放公式: screen_pos = (xserver - anchor) * zoom + anchor
@@ -423,7 +424,7 @@ public class TouchpadViewV1 extends View implements View.OnCapturedPointerListen
         }
         if (finger2 != null) {
             float currDist = (float) Math.hypot(finger1.x - finger2.x, finger1.y - finger2.y) * resolutionScale;
-            if (currDist < MAX_TWO_FINGERS_SCROLL_DISTANCE) {
+            if (twoFingersScroll && currDist < MAX_TWO_FINGERS_SCROLL_DISTANCE) {
                 scrollAccumY += ((finger1.y + finger2.y) * 0.5f) - ((finger1.lastY + finger2.lastY) * 0.5f);
                 if (scrollAccumY < -MAX_SCROLL_ACCUM) {
                     xServer.injectPointerButtonPress(Pointer.Button.BUTTON_SCROLL_DOWN);
@@ -559,6 +560,8 @@ public class TouchpadViewV1 extends View implements View.OnCapturedPointerListen
     public boolean isPinchZoomEnabled() { return pinchZoomEnabled; }
     public void setShortDragEnabled(boolean b) { shortDragEnabled = b; }
     public boolean isShortDragEnabled() { return shortDragEnabled; }
+    public void setTwoFingersScroll(boolean b) { twoFingersScroll = b; }
+    public boolean isTwoFingersScroll() { return twoFingersScroll; }
 
     public boolean onExternalMouseEvent(MotionEvent event) {
         if (!isEnabled() || !event.isFromSource(InputDevice.SOURCE_MOUSE)) return false;

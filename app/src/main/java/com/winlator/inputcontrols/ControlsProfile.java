@@ -29,6 +29,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
     private boolean longPressRightClick = true;
     private boolean pinchZoomEnabled = false;
     private boolean shortDragEnabled = false;
+    private boolean twoFingersScroll = true;
     private final ArrayList<ControlElement> elements = new ArrayList<>();
     private final ArrayList<ExternalController> controllers = new ArrayList<>();
     private final List<ControlElement> immutableElements = Collections.unmodifiableList(elements);
@@ -125,6 +126,14 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
         this.shortDragEnabled = shortDragEnabled;
     }
 
+    public boolean isTwoFingersScroll() {
+        return twoFingersScroll;
+    }
+
+    public void setTwoFingersScroll(boolean twoFingersScroll) {
+        this.twoFingersScroll = twoFingersScroll;
+    }
+
     public boolean isVirtualGamepad() {
         return virtualGamepad;
     }
@@ -196,6 +205,7 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
             if (!longPressRightClick) data.put("longPressRightClick", longPressRightClick);
             if (pinchZoomEnabled) data.put("pinchZoomEnabled", pinchZoomEnabled);
             if (shortDragEnabled) data.put("shortDragEnabled", shortDragEnabled);
+            if (!twoFingersScroll) data.put("twoFingersScroll", twoFingersScroll);
             
             JSONArray elementsJSONArray = new JSONArray();
             if (!elementsLoaded && file.isFile()) {

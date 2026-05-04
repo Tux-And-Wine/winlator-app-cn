@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -120,24 +121,27 @@ public class InputControlsFragment extends Fragment {
         });
 
         final Spinner sTouchpadMode = view.findViewById(R.id.STouchpadMode);
+        final boolean[] isUserTouchpadModeChange = {false};
         sTouchpadMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (currentProfile != null) {
                     currentProfile.setTouchpadMode((byte)position);
-                    // Apply mode-specific defaults
-                    if (position == TouchpadView.TOUCHPAD_MODE_V2) {
-                        currentProfile.setTwoFingersDrag(false);
-                        currentProfile.setTwoFingersRightClick(false);
-                        currentProfile.setLongPressRightClick(true);
-                        currentProfile.setPinchZoomEnabled(true);
-                        currentProfile.setShortDragEnabled(true);
-                    } else {
-                        currentProfile.setTwoFingersDrag(true);
-                        currentProfile.setTwoFingersRightClick(true);
-                        currentProfile.setLongPressRightClick(true);
-                        currentProfile.setPinchZoomEnabled(false);
-                        currentProfile.setShortDragEnabled(false);
+                    // Only reset advanced settings when user actively changes the mode
+                    if (isUserTouchpadModeChange[0]) {
+                        if (position == TouchpadView.TOUCHPAD_MODE_V2) {
+                            currentProfile.setTwoFingersDrag(false);
+                            currentProfile.setTwoFingersRightClick(false);
+                            currentProfile.setLongPressRightClick(true);
+                            currentProfile.setPinchZoomEnabled(true);
+                            currentProfile.setShortDragEnabled(true);
+                        } else {
+                            currentProfile.setTwoFingersDrag(true);
+                            currentProfile.setTwoFingersRightClick(true);
+                            currentProfile.setLongPressRightClick(true);
+                            currentProfile.setPinchZoomEnabled(false);
+                            currentProfile.setShortDragEnabled(false);
+                        }
                     }
                     currentProfile.save();
                 }
@@ -145,6 +149,13 @@ public class InputControlsFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        sTouchpadMode.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                isUserTouchpadModeChange[0] = true;
+            }
+            return false;
         });
 
         CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
@@ -158,6 +169,7 @@ public class InputControlsFragment extends Fragment {
         view.findViewById(R.id.BTTouchpadSettings).setOnClickListener((v) -> showTouchpadSettingsDialog());
 
         updateLayout = () -> {
+            isUserTouchpadModeChange[0] = false;
             if (currentProfile != null) {
                 sbCursorSpeed.setValue(currentProfile.getCursorSpeed() * 100);
                 cbDisableMouseInput.setChecked(currentProfile.isDisableMouseInput());
@@ -412,12 +424,14 @@ public class InputControlsFragment extends Fragment {
         ((TextView) dialogView.findViewById(R.id.TVTouchpadSettingsTitle)).setText(title);
 
         CheckBox cbTwoFingersDrag = dialogView.findViewById(R.id.CBTwoFingersDrag);
+        CheckBox cbTwoFingersScroll = dialogView.findViewById(R.id.CBTwoFingersScroll);
         CheckBox cbTwoFingersRightClick = dialogView.findViewById(R.id.CBTwoFingersRightClick);
         CheckBox cbLongPressRightClick = dialogView.findViewById(R.id.CBLongPressRightClick);
         CheckBox cbPinchZoomEnabled = dialogView.findViewById(R.id.CBPinchZoomEnabled);
         CheckBox cbShortDragEnabled = dialogView.findViewById(R.id.CBShortDragEnabled);
 
         cbTwoFingersDrag.setChecked(currentProfile.isTwoFingersDrag());
+        cbTwoFingersScroll.setChecked(currentProfile.isTwoFingersScroll());
         cbTwoFingersRightClick.setChecked(currentProfile.isTwoFingersRightClick());
         cbLongPressRightClick.setChecked(currentProfile.isLongPressRightClick());
         cbPinchZoomEnabled.setChecked(currentProfile.isPinchZoomEnabled());
@@ -425,6 +439,11 @@ public class InputControlsFragment extends Fragment {
 
         cbTwoFingersDrag.setOnCheckedChangeListener((buttonView, isChecked) -> {
             currentProfile.setTwoFingersDrag(isChecked);
+            currentProfile.save();
+        });
+
+        cbTwoFingersScroll.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            currentProfile.setTwoFingersScroll(isChecked);
             currentProfile.save();
         });
 

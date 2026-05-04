@@ -21,6 +21,12 @@
         android:text="@string/two_fingers_drag" />
 
     <CheckBox
+        android:id="@+id/CBTwoFingersScroll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/two_fingers_scroll" />
+
+    <CheckBox
         android:id="@+id/CBTwoFingersRightClick"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
