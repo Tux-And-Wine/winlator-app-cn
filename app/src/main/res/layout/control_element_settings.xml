@@ -136,6 +136,51 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/LLTrackpadOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/touch_move_mouse_button" />
+
+            <Spinner
+                style="@style/ComboBox"
+                android:id="@+id/STrackpadPressBinding"
+                android:layout_width="match_parent" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/x_coordinate_center_offset" />
+
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBTrackpadPressOffsetX"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:maxValue="500"
+                app:minValue="-500"
+                app:step="5"
+                app:suffix="px" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/y_coordinate_center_offset" />
+
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBTrackpadPressOffsetY"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:maxValue="500"
+                app:minValue="-500"
+                app:step="5"
+                app:suffix="px" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/LLRadialMenuOptions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -196,6 +241,38 @@
                 android:layout_height="wrap_content"
                 android:text="@string/icon" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/IVCustomIconPreview"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/icon_background"
+                    android:padding="6dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/icon_image_picker" />
+
+                <Button
+                    android:id="@+id/BTBrowseCustomIcon"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/select_local_icon" />
+
+                <Button
+                    android:id="@+id/BTClearCustomIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/clear_icon" />
+            </LinearLayout>
+
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -207,6 +284,104 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal" />
             </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/LLSecondaryIconSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/toggled_icon" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/IVSecondaryCustomIconPreview"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/icon_background"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/icon_image_picker" />
+
+                    <Button
+                        android:id="@+id/BTBrowseSecondaryCustomIcon"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/select_local_icon" />
+
+                    <Button
+                        android:id="@+id/BTClearSecondaryCustomIcon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/clear_icon" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp">
+
+                    <LinearLayout
+                        android:id="@+id/LLSecondaryIconList"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/icon_size" />
+
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBIconScale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:maxValue="200"
+                app:minValue="40"
+                app:step="5"
+                app:suffix="%" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/icon_opacity" />
+
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBIconOpacity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:maxValue="100"
+                app:minValue="0"
+                app:step="5"
+                app:suffix="%" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/pressed_color" />
+
+            <com.winlator.widget.ColorPickerView
+                android:id="@+id/CPVPressedColor"
+                android:layout_width="84dp"
+                android:layout_height="wrap_content" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

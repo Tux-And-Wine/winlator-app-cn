@@ -38,6 +38,7 @@ import com.winlator.xserver.XServer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,6 +49,7 @@ public class InputControlsView extends View {
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private ColorFilter lightColorFilter;
     private ColorFilter darkColorFilter;
+    private final HashMap<Integer, ColorFilter> dynamicColorFilters = new HashMap<>();
     private final Point cursor = new Point();
     private boolean readyToDraw = false;
     private boolean moveCursor = false;
@@ -65,6 +67,7 @@ public class InputControlsView extends View {
     private final Bitmap[] icons = new Bitmap[18];
     private Timer mouseMoveTimer;
     private final PointF mouseMoveOffset = new PointF();
+    private final HashMap<Binding, Integer> activeBindingCounts = new HashMap<>();
     private boolean showTouchscreenControls = true;
     private boolean touchHapticFeedbackEnabled = false;
     private Vibrator vibrator;
@@ -281,6 +284,16 @@ public class InputControlsView extends View {
         return darkColorFilter;
     }
 
+    public ColorFilter getColorFilter(int color) {
+        Integer key = color;
+        ColorFilter colorFilter = dynamicColorFilters.get(key);
+        if (colorFilter == null) {
+            colorFilter = new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN);
+            dynamicColorFilters.put(key, colorFilter);
+        }
+        return colorFilter;
+    }
+
     public TouchpadView getTouchpadView() {
         return touchpadView;
     }
@@ -488,6 +501,8 @@ public class InputControlsView extends View {
     }
 
     public void handleInputEvent(Binding binding, boolean isActionDown, float offset) {
+        if (binding == Binding.NONE) return;
+
         if (binding.isGamepad()) {
             WinHandler winHandler = xServer != null ? xServer.getWinHandler() : null;
             GamepadState state = profile.getGamepadState();
@@ -525,13 +540,19 @@ public class InputControlsView extends View {
                 if (isActionDown) createMouseMoveTimer();
             }
             else if (binding == Binding.MOUSE_SWAPL_R_BUTTONS) {
-                if (isActionDown && touchpadView != null) touchpadView.setSwapMouseButtons();
+                if (isActionDown && touchpadView != null) {
+                    touchpadView.setSwapMouseButtons();
+                    invalidate();
+                }
             }
             else if (binding == Binding.MOUSE_SHOW_INPUT_METHOD) {
                 if (isActionDown) AppUtils.showKeyboard((AppCompatActivity)getContext());
             }
             else {
                 Pointer.Button pointerButton = binding.getPointerButton();
+                boolean shouldDispatch = updateActiveBindingCount(binding, isActionDown);
+                if (!shouldDispatch) return;
+
                 if (isActionDown) {
                     if (pointerButton != null) {
                         xServer.injectPointerButtonPress(pointerButton);
@@ -548,7 +569,26 @@ public class InputControlsView extends View {
         }
     }
 
+    private boolean updateActiveBindingCount(Binding binding, boolean isActionDown) {
+        Integer count = activeBindingCounts.get(binding);
+        int currentCount = count != null ? count : 0;
+
+        if (isActionDown) {
+            activeBindingCounts.put(binding, currentCount + 1);
+            return currentCount == 0;
+        }
+
+        if (currentCount <= 1) {
+            activeBindingCounts.remove(binding);
+            return currentCount == 1;
+        }
+
+        activeBindingCounts.put(binding, currentCount - 1);
+        return false;
+    }
+
     public Bitmap getIcon(byte id) {
+        if (id < 0 || id >= icons.length) return null;
         if (icons[id] == null) {
             Context context = getContext();
             try (InputStream is = context.getAssets().open("inputcontrols/icons/"+id+".png")) {

@@ -60,5 +60,10 @@
             android:id="@+id/BTElementSettings"
             style="@style/ToolButton"
             android:src="@drawable/icon_settings"  />
+
+        <ImageButton
+            android:id="@+id/BTIconPackManager"
+            style="@style/ToolButton"
+            android:src="@drawable/icon_menu"  />
     </LinearLayout>
 </FrameLayout>

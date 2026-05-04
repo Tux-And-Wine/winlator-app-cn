@@ -17,3 +17,5 @@
 #}
 
 -dontobfuscate
+
+-keep class com.catfixture.inputbridge.core.iconmanager.** { *; }

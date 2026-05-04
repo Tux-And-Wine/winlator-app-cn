@@ -1,6 +1,7 @@
 package com.winlator.inputcontrols;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -8,6 +9,7 @@ import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.Base64;
 import android.view.MotionEvent;
 
 import androidx.core.graphics.ColorUtils;
@@ -89,6 +91,17 @@ public class ControlElement {
     private final Bitmask propertyFlags = new Bitmask(new int[]{FLAG_BOUNDING_BOX_NEEDS_UPDATE});
     private String text = "";
     private byte iconId;
+    private String customIconData = "";
+    private Bitmap customIcon;
+    private byte secondaryIconId;
+    private String secondaryCustomIconData = "";
+    private Bitmap secondaryCustomIcon;
+    private int pressedColor = 0xff000000;
+    private float iconScale = 1.0f;
+    private float iconOpacity = 1.0f;
+    private Binding trackpadPressBinding = Binding.NONE;
+    private int trackpadPressOffsetX = 0;
+    private int trackpadPressOffsetY = 0;
     private Range range;
     private byte orientation;
     private PointF currentPosition;
@@ -120,6 +133,9 @@ public class ControlElement {
                 bindings[1] = Binding.MOUSE_MOVE_RIGHT;
                 bindings[2] = Binding.MOUSE_MOVE_DOWN;
                 bindings[3] = Binding.MOUSE_MOVE_LEFT;
+                trackpadPressBinding = Binding.NONE;
+                trackpadPressOffsetX = 0;
+                trackpadPressOffsetY = 0;
                 break;
             case RANGE_BUTTON:
                 scroller = new RangeScroller(inputControlsView, this);
@@ -134,6 +150,17 @@ public class ControlElement {
         }
 
         iconId = 0;
+        customIconData = "";
+        customIcon = null;
+        secondaryIconId = 0;
+        secondaryCustomIconData = "";
+        secondaryCustomIcon = null;
+        pressedColor = 0xff000000;
+        iconScale = 1.0f;
+        iconOpacity = 1.0f;
+        trackpadPressBinding = type == Type.TRACKPAD ? trackpadPressBinding : Binding.NONE;
+        trackpadPressOffsetX = type == Type.TRACKPAD ? trackpadPressOffsetX : 0;
+        trackpadPressOffsetY = type == Type.TRACKPAD ? trackpadPressOffsetY : 0;
         range = null;
         propertyFlags.set(FLAG_BOUNDING_BOX_NEEDS_UPDATE);
     }
@@ -288,6 +315,142 @@ public class ControlElement {
 
     public void setIconId(int iconId) {
         this.iconId = (byte)iconId;
+    }
+
+    public byte getSecondaryIconId() {
+        return secondaryIconId;
+    }
+
+    public void setSecondaryIconId(int secondaryIconId) {
+        this.secondaryIconId = (byte)secondaryIconId;
+    }
+
+    public boolean hasCustomIcon() {
+        return customIconData != null && !customIconData.isEmpty();
+    }
+
+    public String getCustomIconData() {
+        return customIconData;
+    }
+
+    public void setCustomIconData(String customIconData) {
+        this.customIconData = customIconData != null ? customIconData : "";
+        customIcon = null;
+    }
+
+    public Bitmap getCustomIcon() {
+        customIcon = decodeCustomIcon(customIconData, customIcon);
+        return customIcon;
+    }
+
+    public boolean hasSecondaryCustomIcon() {
+        return secondaryCustomIconData != null && !secondaryCustomIconData.isEmpty();
+    }
+
+    public String getSecondaryCustomIconData() {
+        return secondaryCustomIconData;
+    }
+
+    public void setSecondaryCustomIconData(String secondaryCustomIconData) {
+        this.secondaryCustomIconData = secondaryCustomIconData != null ? secondaryCustomIconData : "";
+        secondaryCustomIcon = null;
+    }
+
+    public Bitmap getSecondaryCustomIcon() {
+        secondaryCustomIcon = decodeCustomIcon(secondaryCustomIconData, secondaryCustomIcon);
+        return secondaryCustomIcon;
+    }
+
+    private Bitmap decodeCustomIcon(String iconData, Bitmap cachedIcon) {
+        if (cachedIcon == null && iconData != null && !iconData.isEmpty()) {
+            try {
+                byte[] data = Base64.decode(iconData, Base64.DEFAULT);
+                return BitmapFactory.decodeByteArray(data, 0, data.length);
+            }
+            catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+        return cachedIcon;
+    }
+
+    public boolean hasBinding(Binding targetBinding) {
+        for (Binding binding : bindings) {
+            if (binding == targetBinding) return true;
+        }
+        return false;
+    }
+
+    private boolean isSecondaryIconActive() {
+        return type == Type.BUTTON &&
+            hasBinding(Binding.MOUSE_SWAPL_R_BUTTONS) &&
+            inputControlsView.getTouchpadView() != null &&
+            inputControlsView.getTouchpadView().isSwapMouseButtons() &&
+            (hasSecondaryCustomIcon() || secondaryIconId > 0);
+    }
+
+    private boolean hasVisibleIcon() {
+        return isSecondaryIconActive() ? hasSecondaryCustomIcon() || secondaryIconId > 0 : hasCustomIcon() || iconId > 0;
+    }
+
+    private Bitmap getVisibleCustomIcon() {
+        return isSecondaryIconActive() ? getSecondaryCustomIcon() : getCustomIcon();
+    }
+
+    private byte getVisibleIconId() {
+        if (isSecondaryIconActive()) return secondaryIconId;
+        if (iconId > 0 && bindings[0] == Binding.MOUSE_SWAPL_R_BUTTONS) {
+            return (byte)(isSwapMouseButtons() ? 13 : 12);
+        }
+        return iconId;
+    }
+
+    public int getPressedColor() {
+        return pressedColor;
+    }
+
+    public void setPressedColor(int pressedColor) {
+        this.pressedColor = Color.argb(255, Color.red(pressedColor), Color.green(pressedColor), Color.blue(pressedColor));
+    }
+
+    public float getIconScale() {
+        return iconScale;
+    }
+
+    public void setIconScale(float iconScale) {
+        this.iconScale = iconScale;
+    }
+
+    public float getIconOpacity() {
+        return iconOpacity;
+    }
+
+    public void setIconOpacity(float iconOpacity) {
+        this.iconOpacity = iconOpacity;
+    }
+
+    public Binding getTrackpadPressBinding() {
+        return trackpadPressBinding;
+    }
+
+    public void setTrackpadPressBinding(Binding trackpadPressBinding) {
+        this.trackpadPressBinding = trackpadPressBinding != null ? trackpadPressBinding : Binding.NONE;
+    }
+
+    public int getTrackpadPressOffsetY() {
+        return trackpadPressOffsetY;
+    }
+
+    public int getTrackpadPressOffsetX() {
+        return trackpadPressOffsetX;
+    }
+
+    public void setTrackpadPressOffsetX(int trackpadPressOffsetX) {
+        this.trackpadPressOffsetX = trackpadPressOffsetX;
+    }
+
+    public void setTrackpadPressOffsetY(int trackpadPressOffsetY) {
+        this.trackpadPressOffsetY = trackpadPressOffsetY;
     }
 
     public Rect getBoundingBox() {
@@ -449,7 +612,10 @@ public class ControlElement {
         switch (type) {
             case BUTTON:
             case MIDI_KEY: {
-                if (propertyFlags.isSet(FLAG_PRESSED)) paint.setStyle(Paint.Style.FILL);
+                if (propertyFlags.isSet(FLAG_PRESSED)) {
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setColor(getPressedColorWithOpacity());
+                }
 
                 float cx = boundingBox.centerX();
                 float cy = boundingBox.centerY();
@@ -473,16 +639,15 @@ public class ControlElement {
                     }
                 }
 
-                byte effectiveIconId = getEffectiveIconId();
-                if (effectiveIconId > 0) {
-                    drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), effectiveIconId, true);
+                if (hasVisibleIcon()) {
+                    drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), getVisibleIconId(), getVisibleCustomIcon(), true);
                 }
                 else {
                     String text = getDisplayText();
                     paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, boundingBox.width() - strokeWidth * 2), snappingSize * 2 * scale));
                     paint.setTextAlign(Paint.Align.CENTER);
                     paint.setStyle(Paint.Style.FILL);
-                    paint.setColor(propertyFlags.isSet(FLAG_PRESSED) ? getDarkColor() : lightColor);
+                    paint.setColor(propertyFlags.isSet(FLAG_PRESSED) ? getPressedColorWithOpacity() : lightColor);
                     canvas.drawText(text, x, (y - ((paint.descent() + paint.ascent()) * 0.5f)), paint);
                 }
                 break;
@@ -532,7 +697,7 @@ public class ControlElement {
             case RANGE_BUTTON: {
                 Range range = getRange();
                 int oldColor = paint.getColor();
-                int darkColor = getDarkColor();
+                int darkColor = getPressedColorWithOpacity();
 
                 float radius = snappingSize * 0.75f * scale;
                 float elementSize = scroller.getElementSize();
@@ -717,7 +882,7 @@ public class ControlElement {
 
                 if (propertyFlags.isSet(FLAG_VISIBLE)) {
                     float minTextSize = snappingSize * 2 * scale;
-                    int darkColor = getDarkColor();
+                    int darkColor = getPressedColorWithOpacity();
                     paint.setStrokeCap(Paint.Cap.SQUARE);
                     canvas.drawPath(paths[0], paint);
                     paint.setStrokeCap(Paint.Cap.BUTT);
@@ -751,7 +916,7 @@ public class ControlElement {
                         startAngle = endAngle;
                     }
 
-                    drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, false);
+                    drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, null, false);
                 }
                 else {
                     paint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -767,18 +932,26 @@ public class ControlElement {
         }
     }
 
-    private void drawIcon(Canvas canvas, float cx, float cy, float width, float height, int iconId, boolean automargin) {
+    private void drawIcon(Canvas canvas, float cx, float cy, float width, float height, int iconId, Bitmap customIcon, boolean automargin) {
         Paint paint = inputControlsView.getPaint();
-        Bitmap icon = inputControlsView.getIcon((byte)iconId);
-        paint.setColorFilter(propertyFlags.isSet(FLAG_PRESSED) ? inputControlsView.getDarkColorFilter() : inputControlsView.getLightColorFilter());
+        Bitmap icon = customIcon;
+        boolean isCustomIcon = icon != null;
+        if (icon == null && iconId > 0) icon = inputControlsView.getIcon((byte)iconId);
+        if (icon == null) return;
+        if (!isCustomIcon) {
+            paint.setColorFilter(inputControlsView.getColorFilter(propertyFlags.isSet(FLAG_PRESSED) ? getPressedColorWithOpacity() : getLightColor()));
+        }
         float snappingSize = inputControlsView.getSnappingSize();
         int margin = automargin ? (int)(snappingSize * (shape == Shape.CIRCLE || shape == Shape.SQUARE ? 2.0f : 1.0f) * scale) : 0;
-        int halfSize = (int)((Math.min(width, height) - margin) * 0.5f);
+        int halfSize = (int)((Math.min(width, height) - margin) * 0.5f * iconScale);
+        int oldAlpha = paint.getAlpha();
+        paint.setAlpha((int)(Mathf.clamp(iconOpacity, 0.0f, 1.0f) * 255));
 
         Rect srcRect = new Rect(0, 0, icon.getWidth(), icon.getHeight());
         Rect dstRect = new Rect((int)(cx - halfSize), (int)(cy - halfSize), (int)(cx + halfSize), (int)(cy + halfSize));
         canvas.drawBitmap(icon, srcRect, dstRect, paint);
-        paint.setColorFilter(null);
+        paint.setAlpha(oldAlpha);
+        if (!isCustomIcon) paint.setColorFilter(null);
     }
 
     public JSONObject toJSONObject() {
@@ -798,12 +971,27 @@ public class ControlElement {
             elementJSONObject.put("toggleSwitch", propertyFlags.isSet(FLAG_TOGGLE_SWITCH));
             elementJSONObject.put("text", text);
             elementJSONObject.put("iconId", iconId);
+            if (hasCustomIcon()) elementJSONObject.put("customIconData", customIconData);
+            if (secondaryIconId > 0) elementJSONObject.put("secondaryIconId", secondaryIconId);
+            if (hasSecondaryCustomIcon()) elementJSONObject.put("secondaryCustomIconData", secondaryCustomIconData);
+            if (pressedColor != 0xff000000) elementJSONObject.put("pressedColor", pressedColor);
+            if (iconScale != 1.0f) elementJSONObject.put("iconScale", Float.valueOf(iconScale));
+            if (iconOpacity != 1.0f) elementJSONObject.put("iconOpacity", Float.valueOf(iconOpacity));
 
             if (type == Type.RANGE_BUTTON && range != null) {
                 elementJSONObject.put("range", range.name());
                 if (orientation != 0) elementJSONObject.put("orientation", orientation);
             }
             if (propertyFlags.isSet(FLAG_MOUSE_MOVE_MODE)) elementJSONObject.put("mouseMoveMode", true);
+            if (type == Type.TRACKPAD && trackpadPressBinding != Binding.NONE) {
+                elementJSONObject.put("trackpadPressBinding", trackpadPressBinding.name());
+            }
+            if (type == Type.TRACKPAD && trackpadPressOffsetX != 0) {
+                elementJSONObject.put("trackpadPressOffsetX", trackpadPressOffsetX);
+            }
+            if (type == Type.TRACKPAD && trackpadPressOffsetY != 0) {
+                elementJSONObject.put("trackpadPressOffsetY", trackpadPressOffsetY);
+            }
 
             return elementJSONObject;
         }
@@ -877,6 +1065,7 @@ public class ControlElement {
                 if (type == Type.TRACKPAD) {
                     if (currentPosition == null) currentPosition = new PointF();
                     currentPosition.set(x, y);
+                    pressTrackpadPointerButton();
                 }
                 performHapticFeedback();
                 return handleTouchMove(pointerId, x, y);
@@ -932,7 +1121,7 @@ public class ControlElement {
                     }
                     else {
                         boolean state = binding.isMouseMove() ? (states[i] || states[(i+2)%4]) : states[i];
-                        inputControlsView.handleInputEvent(binding, state, value);
+                        if (binding.isMouseMove() || this.states[i] != state) inputControlsView.handleInputEvent(binding, state, value);
                         this.states[i] = state;
                     }
                 }
@@ -964,7 +1153,7 @@ public class ControlElement {
                             cursorDy = Mathf.roundPoint(value);
                         }
                         else {
-                            inputControlsView.handleInputEvent(binding, states[i], value);
+                            if (this.states[i] != states[i]) inputControlsView.handleInputEvent(binding, states[i], value);
                             this.states[i] = states[i];
                         }
                     }
@@ -979,7 +1168,7 @@ public class ControlElement {
                     float value = i == 1 || i == 3 ? deltaX : deltaY;
                     Binding binding = getBindingAt(i);
                     boolean state = binding.isMouseMove() ? (states[i] || states[(i+2)%4]) : states[i];
-                    inputControlsView.handleInputEvent(binding, state, value);
+                    if (binding.isMouseMove() || this.states[i] != state) inputControlsView.handleInputEvent(binding, state, value);
                     this.states[i] = state;
                 }
             }
@@ -1048,6 +1237,9 @@ public class ControlElement {
                 else if (type == Type.STICK) {
                     inputControlsView.invalidate();
                 }
+                else if (type == Type.TRACKPAD) {
+                    releaseTrackpadPointerButton();
+                }
 
                 if (currentPosition != null) currentPosition = null;
             }
@@ -1111,7 +1303,28 @@ public class ControlElement {
         return Color.argb((int)(opacity * inputControlsView.getOverlayOpacity() * 255), 0, 0, 0);
     }
 
+    public int getPressedColorWithOpacity() {
+        float opacity = inputControlsView.isEditMode() ? Math.max(0.15f, this.opacity) : this.opacity;
+        return Color.argb((int)(opacity * inputControlsView.getOverlayOpacity() * 255), Color.red(pressedColor), Color.green(pressedColor), Color.blue(pressedColor));
+    }
+
     public int getHighlightColor() {
         return Color.argb((int)(inputControlsView.getOverlayOpacity() * 255), 2, 119, 189);
+    }
+
+    private void pressTrackpadPointerButton() {
+        if (trackpadPressBinding == Binding.NONE || inputControlsView.getXServer() == null) return;
+
+        int screenWidth = inputControlsView.getXServer().screenInfo.width;
+        int screenHeight = inputControlsView.getXServer().screenInfo.height;
+        int centerX = Mathf.clamp(screenWidth / 2 + trackpadPressOffsetX, 0, Math.max(0, screenWidth - 1));
+        int centerY = Mathf.clamp(screenHeight / 2 + trackpadPressOffsetY, 0, Math.max(0, screenHeight - 1));
+        inputControlsView.getXServer().injectPointerMove(centerX, centerY);
+        inputControlsView.handleInputEvent(trackpadPressBinding, true);
+    }
+
+    private void releaseTrackpadPointerButton() {
+        if (trackpadPressBinding == Binding.NONE || inputControlsView.getXServer() == null) return;
+        inputControlsView.handleInputEvent(trackpadPressBinding, false);
     }
 }

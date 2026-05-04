@@ -1,6 +1,7 @@
 *.iml
 .gradle
 /local.properties
+/.idea
 /.idea/workspace.xml
 /.idea/libraries
 /.idea/caches
@@ -8,3 +9,6 @@
 /build
 /captures
 .externalNativeBuild
+/app/*.apk
+/app/*.7z
+/app/图标包

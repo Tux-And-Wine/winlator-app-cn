@@ -27,6 +27,7 @@ public class TouchpadView extends FrameLayout {
     private boolean pointerButtonLeftEnabled = true;
     private boolean pointerButtonRightEnabled = true;
     private boolean moveCursorToTouchpoint = false;
+    private boolean swapMouseButtons = false;
     private boolean twoFingersDrag = true;
     private boolean twoFingersRightClick = true;
     private boolean longPressRightClick = true;
@@ -66,6 +67,7 @@ public class TouchpadView extends FrameLayout {
             v1.setPointerButtonLeftEnabled(pointerButtonLeftEnabled);
             v1.setPointerButtonRightEnabled(pointerButtonRightEnabled);
             v1.setMoveCursorToTouchpoint(moveCursorToTouchpoint);
+            v1.setSwapMouseButtons(swapMouseButtons);
             v1.setFourFingersTapCallback(fourFingersTapCallback);
             v1.setTwoFingersDrag(twoFingersDrag);
             v1.setTwoFingersRightClick(twoFingersRightClick);
@@ -80,6 +82,7 @@ public class TouchpadView extends FrameLayout {
             v2.setPointerButtonLeftEnabled(pointerButtonLeftEnabled);
             v2.setPointerButtonRightEnabled(pointerButtonRightEnabled);
             v2.setMoveCursorToTouchpoint(moveCursorToTouchpoint);
+            v2.setSwapMouseButtons(swapMouseButtons);
             v2.setFourFingersTapCallback(fourFingersTapCallback);
             v2.setTwoFingersDrag(twoFingersDrag);
             v2.setTwoFingersRightClick(twoFingersRightClick);
@@ -94,6 +97,7 @@ public class TouchpadView extends FrameLayout {
             v3.setPointerButtonLeftEnabled(pointerButtonLeftEnabled);
             v3.setPointerButtonRightEnabled(pointerButtonRightEnabled);
             v3.setMoveCursorToTouchpoint(moveCursorToTouchpoint);
+            v3.setSwapMouseButtons(swapMouseButtons);
             v3.setFourFingersTapCallback(fourFingersTapCallback);
             v3.setTwoFingersDrag(twoFingersDrag);
             v3.setTwoFingersRightClick(twoFingersRightClick);
@@ -337,24 +341,29 @@ public class TouchpadView extends FrameLayout {
     }
 
     public void setSwapMouseButtons() {
+        swapMouseButtons = !swapMouseButtons;
         if (impl instanceof TouchpadViewV1) {
-            ((TouchpadViewV1) impl).setSwapMouseButtons();
+            ((TouchpadViewV1) impl).setSwapMouseButtons(swapMouseButtons);
         } else if (impl instanceof TouchpadViewV2) {
-            ((TouchpadViewV2) impl).setSwapMouseButtons();
+            ((TouchpadViewV2) impl).setSwapMouseButtons(swapMouseButtons);
         } else if (impl instanceof TouchpadViewV3) {
-            ((TouchpadViewV3) impl).setSwapMouseButtons();
+            ((TouchpadViewV3) impl).setSwapMouseButtons(swapMouseButtons);
         }
     }
 
     public boolean isSwapMouseButtons() {
+        return swapMouseButtons;
+    }
+
+    public void setSwapMouseButtons(boolean swapMouseButtons) {
+        this.swapMouseButtons = swapMouseButtons;
         if (impl instanceof TouchpadViewV1) {
-            return ((TouchpadViewV1) impl).isSwapMouseButtons();
+            ((TouchpadViewV1) impl).setSwapMouseButtons(swapMouseButtons);
         } else if (impl instanceof TouchpadViewV2) {
-            return ((TouchpadViewV2) impl).isSwapMouseButtons();
+            ((TouchpadViewV2) impl).setSwapMouseButtons(swapMouseButtons);
         } else if (impl instanceof TouchpadViewV3) {
-            return ((TouchpadViewV3) impl).isSwapMouseButtons();
+            ((TouchpadViewV3) impl).setSwapMouseButtons(swapMouseButtons);
         }
-        return false;
     }
 
     @Override

@@ -316,9 +316,18 @@ public class ControlsProfile implements Comparable<ControlsProfile>, GamepadSlot
                     element.setScale((float)elementJSONObject.getDouble("scale"));
                     element.setText(elementJSONObject.getString("text"));
                     element.setIconId(elementJSONObject.getInt("iconId"));
+                    if (elementJSONObject.has("customIconData")) element.setCustomIconData(elementJSONObject.getString("customIconData"));
+                    if (elementJSONObject.has("secondaryIconId")) element.setSecondaryIconId(elementJSONObject.getInt("secondaryIconId"));
+                    if (elementJSONObject.has("secondaryCustomIconData")) element.setSecondaryCustomIconData(elementJSONObject.getString("secondaryCustomIconData"));
+                    if (elementJSONObject.has("pressedColor")) element.setPressedColor(elementJSONObject.getInt("pressedColor"));
+                    if (elementJSONObject.has("iconScale")) element.setIconScale((float)elementJSONObject.getDouble("iconScale"));
+                    if (elementJSONObject.has("iconOpacity")) element.setIconOpacity((float)elementJSONObject.getDouble("iconOpacity"));
                     if (elementJSONObject.has("range")) element.setRange(ControlElement.Range.valueOf(elementJSONObject.getString("range")));
                     if (elementJSONObject.has("orientation")) element.setOrientation((byte)elementJSONObject.getInt("orientation"));
                     if (elementJSONObject.has("mouseMoveMode")) element.setMouseMoveMode(true);
+                    if (elementJSONObject.has("trackpadPressBinding")) element.setTrackpadPressBinding(Binding.fromString(elementJSONObject.getString("trackpadPressBinding")));
+                    if (elementJSONObject.has("trackpadPressOffsetX")) element.setTrackpadPressOffsetX(elementJSONObject.getInt("trackpadPressOffsetX"));
+                    if (elementJSONObject.has("trackpadPressOffsetY")) element.setTrackpadPressOffsetY(elementJSONObject.getInt("trackpadPressOffsetY"));
                     if (elementJSONObject.has("opacity")) element.setOpacity((float)elementJSONObject.getDouble("opacity"));
                 }
 
